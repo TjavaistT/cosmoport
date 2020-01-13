@@ -86,7 +86,7 @@ public class ShipServiceImpl implements ShipService {
 
         List<Ship> ships = new ArrayList<>();
         for (Ship ship : selectedShipsWithAllDates) {
-            int year = getYearFromTimestamp(ship.getProdDate().getTime());
+            int year = (Integer)ship.getPropProdDate().getValue();
 
             if (
                 year >= afterYear &&
@@ -131,7 +131,7 @@ public class ShipServiceImpl implements ShipService {
 
         limits.put("crewSize", getPropLimits(Ship.CrewSize.MIN, Ship.CrewSize.MAX));
 
-        limits.put("speed", getPropLimits(Double.valueOf(Ship.Speed.MIN), Double.valueOf(Ship.Speed.MAX)));
+        limits.put("speed", getPropLimits(Ship.Speed.MIN, Ship.Speed.MAX));
 
         return limits;
     }
@@ -148,10 +148,6 @@ public class ShipServiceImpl implements ShipService {
 
     @Override
     public void saveShip(Ship ship) {
-
-        if(ship.isUsed() == null) ship.setIsUsed(false);
-        ship.setRating();
-
         shipRepository.save(ship);
     }
 

@@ -1,5 +1,7 @@
 package com.space.model.ship;
 
+import com.space.model.ship.Exceptions.NotRealShipType;
+
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import java.util.stream.Stream;

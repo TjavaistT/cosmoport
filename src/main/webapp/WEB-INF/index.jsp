@@ -99,7 +99,7 @@
                 <c:out value="${ship.shipType}" />
             </td>
             <td>
-                <c:out value="${ship.prodDate}" />
+                <c:out value="${ship.propProdDate.value}" />
             </td>
             <td>
                 <c:out value="${ship.isUsed()}" />
@@ -108,7 +108,7 @@
                 <c:out value="${ship.speed}" />
             </td>
             <td>
-                <c:out value="${ship.crewSize}" />
+                <c:out value="${ship.propCrewSize.value}" />
             </td>
             <td>
                 <c:out value="${ship.rating}" />

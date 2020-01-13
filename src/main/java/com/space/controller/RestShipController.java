@@ -1,17 +1,20 @@
 package com.space.controller;
 
+import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.space.exceptions.BadRequest;
 import com.space.exceptions.NotFoundException;
 import com.space.model.ship.Ship;
 import com.space.model.ship.ShipType;
 import com.space.service.ShipService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/rest/ships")
@@ -78,6 +81,63 @@ public class RestShipController {
         );
     }
 
+    @PostMapping
+    public Map<String, String> create(
+            @RequestBody Map<String, String> requestShip
+    ){
+
+        String name = requestShip.get("name");
+        String planet = requestShip.get("planet");
+        String shipType = requestShip.get("shipType");
+        String prodDate = requestShip.get("prodDate");
+        String speed = requestShip.get("speed");
+        String crewSize = requestShip.get("crewSize");
+
+        if(isValidParams(name, planet, shipType, prodDate, speed, crewSize)){ throw new BadRequest(); }
+
+        try {
+            boolean isUsed = false;
+
+            if(requestShip.get("isUsed") != null){
+                isUsed = Boolean.parseBoolean(requestShip.get("isUsed"));
+            }
+
+            long max = shipService.findAll().stream()
+                    .map(ship -> ship.getId())
+                    .max(Long::compareTo)
+                    .orElse(0L);
+            long id = max + 1;
+
+            Calendar productionDate = Calendar.getInstance();
+            productionDate.setTimeInMillis(Long.parseLong(prodDate));
+//            DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
+//            String stringProductionData = dateFormat.format(productionDate.getTime());
+//            String stringProductionData = "3011-01-01";
+//            Date trueFormatProductionDate = dateFormat.parse(stringProductionData);
+
+            //TODO - доработать
+            //ShipType.valueOf(shipType)
+
+            Ship currentShip = new Ship(
+                    id,
+                    name,
+                    planet,
+                    shipType,
+                    productionDate.getTime(),
+                    isUsed,
+                    Double.parseDouble(speed),
+                    Integer.parseInt(crewSize)
+            );
+
+            shipService.saveShip(currentShip);
+
+            return currentShip.toJsonMap();
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BadRequest();
+        }
+    }
+
     @GetMapping("/count")
     public int count(
             @RequestParam(value = "name", required = false) String name,
@@ -128,19 +188,6 @@ public class RestShipController {
         return ships.size();
     }
 
-    @PostMapping
-    public ResponseEntity<Ship> createShip(
-            @Validated(Ship.Create.class) @RequestBody Ship ship,
-            BindingResult bindingResult
-    ){
-        if(bindingResult.hasErrors()) {
-            throw new BadRequest();
-        } else {
-            shipService.saveShip(ship);
-            return new ResponseEntity<>(ship, HttpStatus.OK);
-        }
-    }
-
     @GetMapping("/{id}")
     public Ship getShipById(@PathVariable String id){
         try {
@@ -161,64 +208,63 @@ public class RestShipController {
     }
 
     @PostMapping("/{id}")
-    public ResponseEntity<Ship> updateShipById(
-            @PathVariable Long id,
-            @Validated(Ship.Update.class) @RequestBody Ship requestShip
+    public Map<String, String> updateShipById(
+            @PathVariable String id,
+            @RequestBody Map<String, String> requestShip
     ){
         try {
 
-            if (id < 1) {
+            long ID = Long.parseLong(id);
+
+            if (ID == 0) {
                 throw new BadRequest();
             }
 
-            Ship savedShip = shipService.getShipById(id);
+            Ship savedShip = shipService.getShipById(ID);
 
             if (savedShip == null) {
                 throw new NotFoundException();
             }
 
-            boolean isFieldChange = false ;
-
-            if(requestShip.getName() != null) {
-                savedShip.setName(requestShip.getName());
-                isFieldChange = true;
+            if(requestShip.get("name") != null && requestShip.get("name").isEmpty()){
+                throw new BadRequest();
+            } else if (requestShip.get("name") != null) {
+                savedShip.setName(requestShip.get("name"));
             }
 
-            if(requestShip.getPlanet() != null){
-                savedShip.setPlanet(requestShip.getPlanet());
-                isFieldChange = true;
-            }
-            //TODO - доработать
-            //ShipType.valueOf(shipType)
-
-            if(requestShip.getShipType() != null) {
-                savedShip.setShipType(requestShip.getShipType() );
-                isFieldChange = true;
+            if(requestShip.get("planet") != null){
+                savedShip.setPlanet(requestShip.get("planet"));
             }
 
-            if(requestShip.getProdDate() != null) {
-                savedShip.setProdDate(requestShip.getProdDate());
-                isFieldChange = true;
+            if(requestShip.get("shipType") != null) {
+                savedShip.setShipType(requestShip.get("shipType"));
             }
 
-            if(requestShip.isUsed() != null){
-                savedShip.setIsUsed(requestShip.isUsed());
-                isFieldChange = true;
+            if(requestShip.get("prodDate") != null) {
+                long prodDate = Long.parseLong(requestShip.get("prodDate"));
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTimeInMillis(prodDate);
+                savedShip.setProdDate(calendar.getTime());
             }
 
-            if(requestShip.getSpeed() != null) {
-                savedShip.setSpeed(requestShip.getSpeed());
-                isFieldChange = true;
+            if(requestShip.get("isUsed") != null) {
+                Boolean isUsed = Boolean.parseBoolean(requestShip.get("isUsed"));
+                savedShip.setIsUsed(isUsed);
             }
 
-            if(requestShip.getCrewSize() != null) {
-                savedShip.setCrewSize(requestShip.getCrewSize());
-                isFieldChange = true;
+            if(requestShip.get("speed") != null) {
+                double speed = Double.parseDouble(requestShip.get("speed"));
+                savedShip.setSpeed(speed);
             }
 
-            if(isFieldChange){ shipService.saveShip(savedShip); }
+            if(requestShip.get("crewSize") != null) {
+                int crewSize = Integer.parseInt(requestShip.get("crewSize"));
+                savedShip.setCrewSize(crewSize);
+            }
 
-            return new ResponseEntity<>(savedShip, HttpStatus.OK);
+            shipService.saveShip(savedShip);
+
+            return savedShip.toJsonMap();
 
         } catch (NotFoundException nfe){
             nfe.printStackTrace();
@@ -245,6 +291,15 @@ public class RestShipController {
         } catch (NumberFormatException ex){
             throw new BadRequest();
         }
+    }
+
+    private boolean isValidParams(String name, String planet, String shipType, String prodDate, String speed, String crewSize) {
+        return name == null || name.isEmpty() || name.length() > 50 ||
+                planet == null || planet.isEmpty() || planet.length() > 50 ||
+                shipType == null ||
+                prodDate == null ||
+                speed == null ||
+                crewSize == null;
     }
 
     private String toValidString(@RequestParam(value = "name", required = false) String name) {

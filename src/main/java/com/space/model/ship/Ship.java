@@ -1,17 +1,15 @@
 package com.space.model.ship;
 
-import com.space.model.ship.validation.YearRange;
+import com.space.model.ship.Exceptions.NotRealCrewSize;
+import com.space.model.ship.Exceptions.NotRealMaxSpeedException;
+import com.space.model.ship.Exceptions.NotRealProdDateException;
 
-import javax.persistence.*;
-import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import javax.persistence.*;
 
 @Entity
 @Table(name = "ship")
@@ -19,47 +17,42 @@ import java.util.Map;
 public class Ship implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    public interface Create{}
-    public interface Update{}
+    public static final double USED = 0.5;
+    public static final int NEW = 1;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", insertable = false, nullable = false)
     private Long id;
 
-    @NotNull(groups = {Create.class})
-    @Size(min = 1, max = 50, groups = {Create.class, Update.class})
+    @Column(name = "name")
     private String name;
 
-    @NotNull(groups = {Create.class})
-    @Size(min = 1, max = 50, groups = {Create.class, Update.class})
+    @Column(name = "planet")
     private String planet;
 
-    @NotNull(groups = Create.class)
+    @Column(name = "shipType")
     private String shipType;
 
-    @NotNull(groups = Create.class)
-    @YearRange(min = ProdDate.MIN, max = ProdDate.MAX, groups = {Create.class, Update.class})
     @Temporal(TemporalType.DATE)
+    @Column(name = "prodDate")
     private Date prodDate;
 
+    @Column(name = "isUsed")
     private Boolean isUsed;
 
-    @NotNull(groups = Create.class)
-    @DecimalMin(value = Speed.MIN, groups = {Create.class, Update.class})
-    @DecimalMax(value = Speed.MAX, groups = {Create.class, Update.class})
+    @Column(name = "speed")
     private Double speed;
 
-    @NotNull(groups = Create.class)
-    @Min(value = CrewSize.MIN, groups = {Create.class, Update.class} )
-    @Max(value = CrewSize.MAX, groups = {Create.class, Update.class} )
+    @Column(name = "crewSize")
     private Integer crewSize;
 
+    @Column(name = "rating")
     private Double rating;
 
     public Ship() { }
 
-    public Ship(String name, String planet, String shipType, Date prodDate, Boolean isUsed, double speed, int crewSize) {
+    public Ship(long id, String name, String planet, String shipType, Date prodDate, Boolean isUsed, double speed, int crewSize) {
         setId(id);
         setName(name);
         setPlanet(planet);
@@ -102,21 +95,33 @@ public class Ship implements Serializable {
     this.planet = planet;
     }
 
-    public Date getProdDate() {
+    private Date getProdDate() {
     return prodDate;
     }
 
     public void setProdDate(Date prodDate) {
+
+    int year = getYear(prodDate);
+
+    if (ProdDate.MIN <= year && year <= ProdDate.MAX) {
       this.prodDate = prodDate;
       setRating();
+    } else {
+      throw new NotRealProdDateException();
     }
+    }
+
+    public ProdDate getPropProdDate() {
+    return new ProdDate(getProdDate());
+    }
+
     public Boolean isUsed() {
-        return isUsed;
+    return isUsed;
     }
 
     public void setIsUsed(Boolean used) {
-        this.isUsed = used;
-        setRating();
+    this.isUsed = used;
+    setRating();
     }
 
     public Double getSpeed() {
@@ -124,16 +129,32 @@ public class Ship implements Serializable {
     }
 
     public void setSpeed(Double speed) {
+
+    speed = round(speed, 2);
+
+    if (Speed.MIN <= speed && speed <= Speed.MAX) {
       this.speed = speed;
       setRating();
+    } else {
+      throw new NotRealMaxSpeedException();
+    }
     }
 
-    public Integer getCrewSize() {
-        return crewSize;
+    private Integer getCrewSize() {
+    return crewSize;
     }
 
     public void setCrewSize(Integer crewSize) {
+
+    if (CrewSize.MIN <= crewSize && crewSize <= CrewSize.MAX) {
       this.crewSize = crewSize;
+    } else {
+      throw new NotRealCrewSize();
+    }
+    }
+
+    public CrewSize getPropCrewSize(){
+    return new CrewSize(getCrewSize());
     }
 
     public Double getRating() {
@@ -151,18 +172,19 @@ public class Ship implements Serializable {
       return;
     }
 
-    double koefficientOfUsed = isUsed() ? 0.5 : 1;
+    double koefficientOfUsed = isUsed() ? USED : NEW;
     int currentYear = ProdDate.MAX;
     int prodYear = getYear(prodDate);
 
+    Double computeRating = null;
     try {
-        Double computeRating = (80 * getSpeed() * koefficientOfUsed)/(currentYear - prodYear + 1);
-        this.rating = round(computeRating, 3);
+      computeRating = (80 * getSpeed() * koefficientOfUsed)/(currentYear - prodYear + 1);
+      this.rating = round(computeRating, 3);
     } catch (ArithmeticException e) {
-        double result = (currentYear - prodYear + 1);
-        System.out.println("нельзя делить на ноль");
-        System.out.println("currentYear - prodYear + 1 = " + result );
-        e.printStackTrace();
+      double result = (currentYear - prodYear + 1);
+      System.out.println("нельзя делить на ноль");
+      System.out.println("currentYear - prodYear + 1 = " + result );
+      e.printStackTrace();
     }
     }
 
@@ -191,35 +213,50 @@ public class Ship implements Serializable {
     }
 
     public Map<String, String> toJsonMap() {
-        Map<String, String> map = new LinkedHashMap<>();
-        map.put("id", String.valueOf(id));
-        map.put("name", name);
-        map.put("planet", planet);
-        map.put("shipType", shipType);
-        map.put("prodDate", String.valueOf(prodDate.getTime()));
-        map.put("isUsed", String.valueOf(isUsed));
-        map.put("speed", String.valueOf(speed));
-        map.put("crewSize", String.valueOf(crewSize));
-        map.put("rating", String.valueOf(rating));
+    Map<String, String> map = new LinkedHashMap<>();
+    map.put("id", String.valueOf(id));
+    map.put("name", name);
+    map.put("planet", planet);
+    map.put("shipType", shipType);
+    map.put("prodDate", String.valueOf(prodDate.getTime()));
+    map.put("isUsed", String.valueOf(isUsed));
+    map.put("speed", String.valueOf(speed));
+    map.put("crewSize", String.valueOf(crewSize));
+    map.put("rating", String.valueOf(rating));
 
-        return map;
+    return map;
     }
 
     public class ProdDate extends ShipProps{
+
       public static final int MIN = 2800;
       public static final int MAX = 3019;
+
+      ProdDate(Date prodDate) {
+        super(getYear(prodDate));
+      }
 
     }
 
     public class CrewSize extends ShipProps{
+
       public static final int MIN = 1;
       public static final int MAX = 9999;
+
+      CrewSize(Integer size){
+        super(size);
+      }
 
     }
 
     public class Speed extends ShipProps{
-        public static final String MIN = "0.01";
-        public static final String MAX = "0.99";
+
+    public static final double MIN = 0.01;
+    public static final double MAX = 0.99;
+
+    Speed(Double size){
+      super(size);
+    }
 
     }
 
