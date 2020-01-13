@@ -1,29 +1,15 @@
 package com.space.service;
 
-import com.space.controller.ShipOrder;
 import com.space.model.ship.Ship;
-import com.space.model.ship.ShipType;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 public interface ShipService {
 
-    Collection<Ship> selectShips(
-            String name, String planet,
-            ShipType shipType,
-            Long after, Long before,
-            Boolean isUsed, Boolean isNew,
-            Double minSpeed, Double maxSpeed,
-            Integer minCrewSize, Integer maxCrewSize,
-            Double minRating, Double maxRating,
-
-            Integer pageNumber, Integer pageSize,
-
-            ShipOrder order);
-
-    List<Ship> findAll();
+    List<Ship> selectWithFilter(Specification<Ship> specification, Pageable pageable);
 
     Map<String, Object> getShipLimits();
 
@@ -31,5 +17,11 @@ public interface ShipService {
 
     void deleteShipById(long id);
 
-    void saveShip(Ship searchedShip);
+    void save(Ship searchedShip);
+
+    long getCount(Specification<Ship> specification);
+
+    List<Ship> findAll();
+
+    boolean isExistShipById(long id);
 }

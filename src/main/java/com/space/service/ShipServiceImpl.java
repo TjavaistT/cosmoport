@@ -1,18 +1,15 @@
 package com.space.service;
 
-import com.space.controller.ShipOrder;
 import com.space.model.ship.Ship;
 import com.space.model.ship.ShipType;
 import com.space.repository.ShipRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ShipServiceImpl implements ShipService {
@@ -27,60 +24,65 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public Collection<Ship> selectShips(
-        String name, String planet,
-        ShipType shipType,
-        Long after, Long before,
-        Boolean isUsed, Boolean isNew,
-        Double minSpeed, Double maxSpeed,
-        Integer minCrewSize, Integer maxCrewSize,
-        Double minRating, Double maxRating,
-
-        Integer pageNumber, Integer pageSize,
-
-        ShipOrder order)
-    {
-
-        List<String> shipTypes = getSelectedShipTypes(shipType);
-
-        int afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
-        int beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
-
-        minSpeed = minSpeed == null ? 0 : minSpeed;
-        maxSpeed = maxSpeed == null ? 99999 : maxSpeed;
-
-        minRating = minRating == null ? 0 : minRating;
-        maxRating = maxRating == null ? 99999 : maxRating;
-
-        minCrewSize = minCrewSize == null ? Ship.CrewSize.MIN : minCrewSize;
-        maxCrewSize = maxCrewSize == null ? Ship.CrewSize.MAX : maxCrewSize;
-
-        pageNumber = pageNumber == null ? 0 : pageNumber;
-        pageSize = pageSize == null || pageSize == 0  ? 99999 : pageSize;
-
-        String sortOrder = order == null ? ShipOrder.ID.getFieldName() : order.getFieldName();
-
-        List<Ship> selectedShipsWithAllDates = shipRepository.selectShips(
-                name,
-                planet,
-                shipTypes,
-                isUsed, isNew,
-
-                minSpeed, maxSpeed,
-
-                minCrewSize, maxCrewSize,
-                minRating, maxRating,
-
-                Sort.by(Sort.Direction.ASC, sortOrder)
-        );
-
-        List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
-
-        return selectedShips.stream()
-                .skip(pageNumber * pageSize)
-                .limit(pageSize)
-                .collect(Collectors.toList());
+    public List<Ship> selectWithFilter(Specification<Ship> specification, Pageable pageable) {
+        return  shipRepository.findAll(specification, pageable).getContent();
     }
+
+//    @Override
+//    public Collection<Ship> selectShips(
+//        String name, String planet,
+//        ShipType shipType,
+//        Long after, Long before,
+//        Boolean isUsed, Boolean isNew,
+//        Double minSpeed, Double maxSpeed,
+//        Integer minCrewSize, Integer maxCrewSize,
+//        Double minRating, Double maxRating,
+//
+//        Integer pageNumber, Integer pageSize,
+//
+//        ShipOrder order)
+//    {
+//
+//        List<String> shipTypes = getSelectedShipTypes(shipType);
+//
+//        int afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
+//        int beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
+//
+//        minSpeed = minSpeed == null ? 0 : minSpeed;
+//        maxSpeed = maxSpeed == null ? 99999 : maxSpeed;
+//
+//        minRating = minRating == null ? 0 : minRating;
+//        maxRating = maxRating == null ? 99999 : maxRating;
+//
+//        minCrewSize = minCrewSize == null ? Ship.CrewSize.MIN : minCrewSize;
+//        maxCrewSize = maxCrewSize == null ? Ship.CrewSize.MAX : maxCrewSize;
+//
+//        pageNumber = pageNumber == null ? 0 : pageNumber;
+//        pageSize = pageSize == null || pageSize == 0  ? 99999 : pageSize;
+//
+//        String sortOrder = order == null ? ShipOrder.ID.getFieldName() : order.getFieldName();
+//
+//        List<Ship> selectedShipsWithAllDates = shipRepository.selectShips(
+//                name,
+//                planet,
+//                shipTypes,
+//                isUsed, isNew,
+//
+//                minSpeed, maxSpeed,
+//
+//                minCrewSize, maxCrewSize,
+//                minRating, maxRating,
+//
+//                Sort.by(Sort.Direction.ASC, sortOrder)
+//        );
+//
+//        List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
+//
+//        return selectedShips.stream()
+//                .skip(pageNumber * pageSize)
+//                .limit(pageSize)
+//                .collect(Collectors.toList());
+//    }
 
     private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, int afterYear, int beforeYear) {
 
@@ -120,7 +122,12 @@ public class ShipServiceImpl implements ShipService {
     }
 
     public List<Ship> findAll(){
-        return shipRepository.findAllCustom();
+        return shipRepository.findAll();
+    }
+
+    @Override
+    public boolean isExistShipById(long id) {
+        return shipRepository.existsById(id);
     }
 
     @Override
@@ -147,12 +154,17 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public void saveShip(Ship ship) {
+    public void save(Ship ship) {
 
         if(ship.isUsed() == null) ship.setIsUsed(false);
         ship.setRating();
 
         shipRepository.save(ship);
+    }
+
+    @Override
+    public long getCount(Specification<Ship> specification) {
+        return shipRepository.count(specification);
     }
 
     private Map<String, Number> getPropLimits(Number min, Number max) {
@@ -163,6 +175,4 @@ public class ShipServiceImpl implements ShipService {
 
         return propLimits;
     }
-
-
 }

@@ -5,13 +5,21 @@ import com.space.exceptions.NotFoundException;
 import com.space.model.ship.Ship;
 import com.space.model.ship.ShipType;
 import com.space.service.ShipService;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collection;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+
+import static com.space.controller.ShipSpecification.*;
 
 @RestController
 @RequestMapping("/rest/ships")
@@ -28,7 +36,7 @@ public class RestShipController {
     }
 
     @GetMapping
-    public Collection<Ship> listByFilterWithSortingAndPagination(
+    public List<Ship> listByFilter(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "planet", required = false) String planet,
             @RequestParam(value = "shipType", required = false) ShipType shipType,
@@ -52,34 +60,26 @@ public class RestShipController {
 
         planet = toValidString(planet);
 
-        boolean isNew;
-        if(isUsed == null){
-            isUsed = true;
-            isNew = true;
-        } else {
-            isNew = !isUsed;
-        }
-
         pageNumber = pageNumber == null ? DEFAULT_PAGE_NUMBER : pageNumber;
         pageSize = pageSize == null ? DEFAULT_PAGE_SIZE : pageSize;
 
-        return shipService.selectShips(
-                name, planet,
-                shipType,
-                after, before,
-                isUsed, isNew,
-                minSpeed, maxSpeed,
-                minCrewSize, maxCrewSize,
-                minRating, maxRating,
+        String sortOrder = "id";
+        if(order != null){
+            sortOrder = order.getFieldName();
+        }
 
-                pageNumber, pageSize,
-
-                order
+        Specification<Ship> specification = getSpecification(
+                name, planet, shipType, after, before, isUsed, minSpeed,
+                maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating
         );
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.Direction.ASC, sortOrder);
+
+        return shipService.selectWithFilter(specification, pageable);
     }
 
     @GetMapping("/count")
-    public int count(
+    public long count(
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "planet", required = false) String planet,
             @RequestParam(value = "shipType", required = false) ShipType shipType,
@@ -91,42 +91,20 @@ public class RestShipController {
             @RequestParam(value = "minCrewSize", required = false) Integer minCrewSize,
             @RequestParam(value = "maxCrewSize", required = false) Integer maxCrewSize,
             @RequestParam(value = "minRating", required = false) Double minRating,
-            @RequestParam(value = "maxRating", required = false) Double maxRating,
-
-            @RequestParam(value = "order", required = false) ShipOrder order
+            @RequestParam(value = "maxRating", required = false) Double maxRating
     ){
         name = toValidString(name);
 
         planet = toValidString(planet);
 
-        boolean isNew;
-        if(isUsed == null){
-            isUsed = true;
-            isNew = true;
-        } else {
-            isNew = !isUsed;
-        }
-
-        Integer pageNumber = 0;
-
-        Integer pageSize = 999999;
-
-        Collection<Ship> ships = shipService.selectShips(
-                name, planet,
-                shipType,
-                after, before,
-                isUsed, isNew,
-                minSpeed, maxSpeed,
-                minCrewSize, maxCrewSize,
-                minRating, maxRating,
-
-                pageNumber, pageSize,
-
-                order
+        Specification<Ship> specification = getSpecification(
+                name, planet, shipType, after, before, isUsed, minSpeed,
+                maxSpeed, minCrewSize, maxCrewSize, minRating, maxRating
         );
 
-        return ships.size();
+        return shipService.getCount(specification);
     }
+
 
     @PostMapping
     public ResponseEntity<Ship> createShip(
@@ -136,20 +114,18 @@ public class RestShipController {
         if(bindingResult.hasErrors()) {
             throw new BadRequest();
         } else {
-            shipService.saveShip(ship);
+            shipService.save(ship);
             return new ResponseEntity<>(ship, HttpStatus.OK);
         }
     }
 
     @GetMapping("/{id}")
-    public Ship getShipById(@PathVariable String id){
+    public Ship getShipById(@PathVariable long id){
         try {
 
-            long ID = Long.parseLong(id);
+            if(id == 0) { throw new BadRequest(); }
 
-            if(ID == 0) { throw new BadRequest(); }
-
-            Ship searchedShip = shipService.getShipById(ID);
+            Ship searchedShip = shipService.getShipById(id);
 
             if(searchedShip == null){ throw new NotFoundException(); }
 
@@ -188,8 +164,6 @@ public class RestShipController {
                 savedShip.setPlanet(requestShip.getPlanet());
                 isFieldChange = true;
             }
-            //TODO - доработать
-            //ShipType.valueOf(shipType)
 
             if(requestShip.getShipType() != null) {
                 savedShip.setShipType(requestShip.getShipType() );
@@ -216,7 +190,7 @@ public class RestShipController {
                 isFieldChange = true;
             }
 
-            if(isFieldChange){ shipService.saveShip(savedShip); }
+            if(isFieldChange){ shipService.save(savedShip); }
 
             return new ResponseEntity<>(savedShip, HttpStatus.OK);
 
@@ -230,26 +204,91 @@ public class RestShipController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteShipById(@PathVariable String id){
+    public void deleteShipById(@PathVariable long id){
         try {
-            long ID = Long.parseLong(id);
 
-            if(ID == 0) { throw new BadRequest(); }
+            if(id == 0) { throw new BadRequest(); }
 
-            Ship searchedShip = shipService.getShipById(ID);
+            if(!shipService.isExistShipById(id)){ throw new NotFoundException(); }
 
-            if(searchedShip == null){ throw new NotFoundException(); }
-
-            shipService.deleteShipById(ID);
+            shipService.deleteShipById(id);
 
         } catch (NumberFormatException ex){
             throw new BadRequest();
         }
     }
-
     private String toValidString(@RequestParam(value = "name", required = false) String name) {
         name = name != null ? name.trim() : "";
         return name;
+    }
+
+
+    private Specification<Ship> getSpecification(
+            String name,
+            String planet,
+            ShipType shipType,
+            Long after,
+            Long before,
+            Boolean isUsed,
+            Double minSpeed,
+            Double maxSpeed,
+            Integer minCrewSize,
+            Integer maxCrewSize,
+            Double minRating,
+            Double maxRating
+    ) {
+
+        Specification<Ship>  specification = Specification.where(paramContains("name", name));
+
+        if(planet != null){
+            specification = specification.and(paramContains("planet", planet));
+        }
+
+        if(shipType != null){
+            specification = specification.and(paramEquals("shipType", shipType.name()));
+        }
+
+        if(after != null){
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date(after));
+            specification = specification.and(dateGreaterEqual("prodDate", cal.getTime()));
+        }
+
+        if(before != null){
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date(before));
+            specification = specification.and(dateLessEqual("prodDate", cal.getTime()));
+        }
+
+        if(isUsed != null){
+            specification = specification.and(paramEquals("isUsed", isUsed));
+        }
+
+        if(minSpeed != null){
+            specification = specification.and(paramGreaterEqual("speed", minSpeed));
+        }
+
+        if(maxSpeed != null){
+            specification = specification.and(paramLessEqual("speed", maxSpeed));
+        }
+
+        if(minCrewSize != null){
+            specification = specification.and(paramGreaterEqual("crewSize", minCrewSize));
+        }
+
+        if(maxCrewSize != null){
+            specification =specification.and(paramLessEqual("crewSize", maxCrewSize));
+        }
+
+        if(minRating != null){
+            specification = specification.and(paramGreaterEqual("rating", minRating));
+        }
+
+        if(maxRating != null){
+            specification = specification.and(paramLessEqual("rating", maxRating));
+        }
+
+        return specification;
     }
 
 }

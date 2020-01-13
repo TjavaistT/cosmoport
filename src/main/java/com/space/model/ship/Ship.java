@@ -59,23 +59,13 @@ public class Ship implements Serializable {
 
     public Ship() { }
 
-    public Ship(String name, String planet, String shipType, Date prodDate, Boolean isUsed, double speed, int crewSize) {
-        setId(id);
-        setName(name);
-        setPlanet(planet);
-        setShipType(shipType);
-        setProdDate(prodDate);
-        setIsUsed(isUsed);
-        setSpeed(speed);
-        setCrewSize(crewSize);
+    public ShipType getShipType() {
+        return shipType == null ? null : ShipType.valueOf(shipType);
     }
 
-    public String getShipType() {
-    return shipType;
-    }
-
-    public void setShipType(String shipType) {
-    this.shipType = shipType;
+    @Enumerated(EnumType.STRING)
+    public void setShipType(ShipType shipType) {
+        this.shipType = String.valueOf(shipType);
     }
 
     public Long getId() {
