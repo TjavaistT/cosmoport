@@ -1,8 +1,8 @@
 package com.space.service;
 
 import com.space.controller.ShipOrder;
-import com.space.model.ship.Ship;
-import com.space.model.ship.ShipType;
+import com.space.model.Ship;
+import com.space.model.ShipType;
 import com.space.repository.ShipRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;

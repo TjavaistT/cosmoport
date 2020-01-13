@@ -1,8 +1,8 @@
-package com.space.model.ship;
+package com.space.model;
 
-import com.space.model.ship.Exceptions.NotRealCrewSize;
-import com.space.model.ship.Exceptions.NotRealMaxSpeedException;
-import com.space.model.ship.Exceptions.NotRealProdDateException;
+import com.space.model.Exceptions.NotRealCrewSize;
+import com.space.model.Exceptions.NotRealMaxSpeedException;
+import com.space.model.Exceptions.NotRealProdDateException;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

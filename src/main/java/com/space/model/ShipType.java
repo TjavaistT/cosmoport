@@ -1,4 +1,4 @@
-package com.space.model.ship;
+package com.space.model;
 
 public enum ShipType {
     ANY,

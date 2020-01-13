@@ -1,7 +1,7 @@
 package com.space.controller.utils;
 
 import com.space.controller.ShipOrder;
-import com.space.model.ship.ShipType;
+import com.space.model.ShipType;
 
 import java.util.ArrayList;
 import java.util.List;

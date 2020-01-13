@@ -1,4 +1,4 @@
-package com.space.model.ship.Exceptions;
+package com.space.model.Exceptions;
 
 public class NotRealCrewSize extends RuntimeException {
     public NotRealCrewSize() {

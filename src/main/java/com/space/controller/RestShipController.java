@@ -2,8 +2,8 @@ package com.space.controller;
 
 import com.space.exceptions.BadRequest;
 import com.space.exceptions.NotFoundException;
-import com.space.model.ship.Ship;
-import com.space.model.ship.ShipType;
+import com.space.model.Ship;
+import com.space.model.ShipType;
 import com.space.service.ShipService;
 import org.springframework.web.bind.annotation.*;
 
