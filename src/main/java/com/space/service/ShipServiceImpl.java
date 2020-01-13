@@ -88,7 +88,7 @@ public class ShipServiceImpl implements ShipService {
 
             if (
                 year >= afterYear &&
-                year < beforeYear
+                year <= beforeYear
             ) {
                     ships.add(ship);
             }
