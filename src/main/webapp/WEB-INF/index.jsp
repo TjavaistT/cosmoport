@@ -99,7 +99,7 @@
                 <c:out value="${ship.shipType}" />
             </td>
             <td>
-                <c:out value="${ship.propProdDate.value}" />
+                <c:out value="${ship.prodDate.value}" />
             </td>
             <td>
                 <c:out value="${ship.isUsed()}" />

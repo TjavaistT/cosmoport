@@ -41,8 +41,8 @@ public class ShipServiceImpl implements ShipService {
 
         List<String> shipTypes = getSelectedShipTypes(shipType);
 
-        int afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
-        int beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
+        Integer afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
+        Integer beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
 
         minSpeed = minSpeed == null ? 0 : minSpeed;
         maxSpeed = maxSpeed == null ? 99999 : maxSpeed;
@@ -74,17 +74,20 @@ public class ShipServiceImpl implements ShipService {
 
         List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
 
+
         return selectedShips.stream()
                 .skip(pageNumber * pageSize)
                 .limit(pageSize)
                 .collect(Collectors.toList());
     }
 
-    private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, int afterYear, int beforeYear) {
+    private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, Integer afterYear, Integer beforeYear) {
 
         List<Ship> ships = new ArrayList<>();
         for (Ship ship : selectedShipsWithAllDates) {
-            int year = (Integer)ship.getPropProdDate().getValue();
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(ship.getProdDate());
+            Integer year = calendar.get(Calendar.YEAR);
 
             if (
                 year >= afterYear &&
@@ -111,7 +114,7 @@ public class ShipServiceImpl implements ShipService {
         return shipTypes;
     }
 
-    private int getYearFromTimestamp(Long after) {
+    private Integer getYearFromTimestamp(Long after) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(after);
         return  calendar.get(Calendar.YEAR);

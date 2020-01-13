@@ -95,7 +95,7 @@ public class Ship implements Serializable {
     this.planet = planet;
     }
 
-    private Date getProdDate() {
+    public Date getProdDate() {
     return prodDate;
     }
 
@@ -109,10 +109,6 @@ public class Ship implements Serializable {
     } else {
       throw new NotRealProdDateException();
     }
-    }
-
-    public ProdDate getPropProdDate() {
-    return new ProdDate(getProdDate());
     }
 
     public Boolean isUsed() {
