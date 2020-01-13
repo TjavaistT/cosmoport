@@ -4,10 +4,8 @@ import com.space.controller.ShipOrder;
 import com.space.model.ship.Ship;
 import com.space.model.ship.ShipType;
 import com.space.repository.ShipRepository;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;

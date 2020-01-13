@@ -1,6 +1,5 @@
 package com.space.controller;
 
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import com.space.exceptions.BadRequest;
 import com.space.exceptions.NotFoundException;
 import com.space.model.ship.Ship;
@@ -8,12 +7,8 @@ import com.space.model.ship.ShipType;
 import com.space.service.ShipService;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -110,13 +105,6 @@ public class RestShipController {
 
             Calendar productionDate = Calendar.getInstance();
             productionDate.setTimeInMillis(Long.parseLong(prodDate));
-//            DateFormat dateFormat = new SimpleDateFormat("YYYY-MM-dd");
-//            String stringProductionData = dateFormat.format(productionDate.getTime());
-//            String stringProductionData = "3011-01-01";
-//            Date trueFormatProductionDate = dateFormat.parse(stringProductionData);
-
-            //TODO - доработать
-            //ShipType.valueOf(shipType)
 
             Ship currentShip = new Ship(
                     id,
