@@ -69,7 +69,7 @@ public class ShipServiceImpl implements ShipService {
                 minCrewSize, maxCrewSize,
                 minRating, maxRating,
 
-                Sort.by(Sort.Direction.DESC, sortOrder)
+                Sort.by(Sort.Direction.ASC, sortOrder)
         );
 
         List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
