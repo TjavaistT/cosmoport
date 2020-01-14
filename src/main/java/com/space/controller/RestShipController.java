@@ -5,6 +5,8 @@ import com.space.exceptions.NotFoundException;
 import com.space.model.Ship;
 import com.space.model.ShipType;
 import com.space.service.ShipService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Calendar;
@@ -77,7 +79,7 @@ public class RestShipController {
     }
 
     @PostMapping
-    public Map<String, String> create(
+    public ResponseEntity<Ship> create(
             @RequestBody Map<String, String> requestShip
     ){
 
@@ -119,7 +121,7 @@ public class RestShipController {
 
             shipService.saveShip(currentShip);
 
-            return currentShip.toJsonMap();
+            return new ResponseEntity<>(currentShip, HttpStatus.OK);
         } catch (Exception e) {
             e.printStackTrace();
             throw new BadRequest();
@@ -196,7 +198,7 @@ public class RestShipController {
     }
 
     @PostMapping("/{id}")
-    public Map<String, String> updateShipById(
+    public ResponseEntity<Ship> updateShipById(
             @PathVariable String id,
             @RequestBody Map<String, String> requestShip
     ){
@@ -252,7 +254,7 @@ public class RestShipController {
 
             shipService.saveShip(savedShip);
 
-            return savedShip.toJsonMap();
+            return new ResponseEntity<>(savedShip, HttpStatus.OK);
 
         } catch (NotFoundException nfe){
             nfe.printStackTrace();

@@ -17,9 +17,6 @@ public class ShipServiceImpl implements ShipService {
 
     private ShipRepository shipRepository;
 
-    @PersistenceContext
-    private EntityManager em;
-
     public ShipServiceImpl(ShipRepository shipRepository) {
         this.shipRepository = shipRepository;
     }
@@ -74,7 +71,6 @@ public class ShipServiceImpl implements ShipService {
 
         List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
 
-
         return selectedShips.stream()
                 .skip(pageNumber * pageSize)
                 .limit(pageSize)
@@ -91,7 +87,7 @@ public class ShipServiceImpl implements ShipService {
 
             if (
                 year >= afterYear &&
-                year <= beforeYear
+                year < beforeYear
             ) {
                     ships.add(ship);
             }
