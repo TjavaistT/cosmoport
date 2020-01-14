@@ -38,9 +38,6 @@ public class ShipServiceImpl implements ShipService {
 
         List<String> shipTypes = getSelectedShipTypes(shipType);
 
-        Integer afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
-        Integer beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
-
         minSpeed = minSpeed == null ? 0 : minSpeed;
         maxSpeed = maxSpeed == null ? 99999 : maxSpeed;
 
@@ -69,7 +66,7 @@ public class ShipServiceImpl implements ShipService {
                 Sort.by(Sort.Direction.ASC, sortOrder)
         );
 
-        List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
+        List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, after, before);
 
         return selectedShips.stream()
                 .skip(pageNumber * pageSize)
@@ -77,24 +74,71 @@ public class ShipServiceImpl implements ShipService {
                 .collect(Collectors.toList());
     }
 
-    private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, Integer afterYear, Integer beforeYear) {
+    private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, Long after, Long before) {
+
+        if(after == null && before == null){
+            return selectedShipsWithAllDates;
+        }
 
         List<Ship> ships = new ArrayList<>();
-        for (Ship ship : selectedShipsWithAllDates) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(ship.getProdDate());
-            Integer year = calendar.get(Calendar.YEAR);
 
-            if (
-                year >= afterYear &&
-                year < beforeYear
-            ) {
+        if (after == null) {
+            Calendar beforeCalendar = getCalendarDate(before);
+
+
+            for (Ship ship : selectedShipsWithAllDates) {
+                Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+
+                if(prodactionDate.compareTo(beforeCalendar) < 0){
                     ships.add(ship);
+                }
+            }
+
+            return ships;
+        }
+
+        if (before == null) {
+            Calendar afterCalendar = getCalendarDate(after);
+
+            for (Ship ship : selectedShipsWithAllDates) {
+                Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+
+                if(prodactionDate.compareTo(afterCalendar) >= 0){
+                    ships.add(ship);
+                }
+            }
+
+            return ships;
+        }
+
+        Calendar afterCalendar = getCalendarDate(after);
+
+        Calendar beforeCalendar = getCalendarDate(before);
+
+
+        for (Ship ship : selectedShipsWithAllDates) {
+            Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+
+            if(prodactionDate.compareTo(afterCalendar) >= 0 &&
+                (prodactionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
+            {
+                ships.add(ship);
             }
         }
 
         return ships;
+    }
 
+    private Calendar getCalendarDate(Long millisecs) {
+        Calendar afterCalendar = Calendar.getInstance();
+        afterCalendar.setTimeInMillis(millisecs);
+        return afterCalendar;
+    }
+
+    private Calendar getCalendarDate(Date date) {
+        Calendar prodactionDate = Calendar.getInstance();
+        prodactionDate.setTime(date);
+        return prodactionDate;
     }
 
     private List<String> getSelectedShipTypes(ShipType shipType) {
@@ -111,8 +155,7 @@ public class ShipServiceImpl implements ShipService {
     }
 
     private Integer getYearFromTimestamp(Long after) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(after);
+        Calendar calendar = getCalendarDate(after);
         return  calendar.get(Calendar.YEAR);
     }
 
