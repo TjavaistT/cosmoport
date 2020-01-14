@@ -87,9 +87,9 @@ public class ShipServiceImpl implements ShipService {
 
 
             for (Ship ship : selectedShipsWithAllDates) {
-                Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+                Calendar productionDate = getCalendarDate(ship.getProdDate());
 
-                if(prodactionDate.compareTo(beforeCalendar) < 0){
+                if((productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0){
                     ships.add(ship);
                 }
             }
@@ -101,9 +101,9 @@ public class ShipServiceImpl implements ShipService {
             Calendar afterCalendar = getCalendarDate(after);
 
             for (Ship ship : selectedShipsWithAllDates) {
-                Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+                Calendar productionDate = getCalendarDate(ship.getProdDate());
 
-                if(prodactionDate.compareTo(afterCalendar) >= 0){
+                if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0){
                     ships.add(ship);
                 }
             }
@@ -117,10 +117,10 @@ public class ShipServiceImpl implements ShipService {
 
 
         for (Ship ship : selectedShipsWithAllDates) {
-            Calendar prodactionDate = getCalendarDate(ship.getProdDate());
+            Calendar productionDate = getCalendarDate(ship.getProdDate());
 
-            if(prodactionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR) >= 0 &&
-                (prodactionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
+            if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0 &&
+                (productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
             {
                 ships.add(ship);
             }
