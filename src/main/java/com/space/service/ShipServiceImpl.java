@@ -76,57 +76,68 @@ public class ShipServiceImpl implements ShipService {
 
     private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, Long after, Long before) {
 
-        if(after == null && before == null){
-            return selectedShipsWithAllDates;
+//        if(after == null && before == null){
+//            return selectedShipsWithAllDates;
+//        }
+//
+//        List<Ship> ships = new ArrayList<>();
+//
+//        if (after == null) {
+//            Calendar beforeCalendar = getCalendarDate(before);
+//
+//
+//            for (Ship ship : selectedShipsWithAllDates) {
+//                Calendar productionDate = getCalendarDate(ship.getProdDate());
+//
+//                if((productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0){
+//                    ships.add(ship);
+//                }
+//            }
+//
+//            return ships;
+//        }
+//
+//        if (before == null) {
+//            Calendar afterCalendar = getCalendarDate(after);
+//
+//            for (Ship ship : selectedShipsWithAllDates) {
+//                Calendar productionDate = getCalendarDate(ship.getProdDate());
+//
+//                if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0){
+//                    ships.add(ship);
+//                }
+//            }
+//
+//            return ships;
+//        }
+//
+//        Calendar afterCalendar = getCalendarDate(after);
+//
+//        Calendar beforeCalendar = getCalendarDate(before);
+//
+//
+//        for (Ship ship : selectedShipsWithAllDates) {
+//            Calendar productionDate = getCalendarDate(ship.getProdDate());
+//
+//            if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0 &&
+//                (productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
+//            {
+//                ships.add(ship);
+//            }
+//        }
+//
+//        return ships;
+
+        if(after != null) {
+            selectedShipsWithAllDates = selectedShipsWithAllDates.stream().filter(ship -> ship.getProdDate().after(new Date(after))).collect(Collectors.toList());
         }
 
-        List<Ship> ships = new ArrayList<>();
-
-        if (after == null) {
-            Calendar beforeCalendar = getCalendarDate(before);
-
-
-            for (Ship ship : selectedShipsWithAllDates) {
-                Calendar productionDate = getCalendarDate(ship.getProdDate());
-
-                if((productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0){
-                    ships.add(ship);
-                }
-            }
-
-            return ships;
+        if(before != null) {
+            selectedShipsWithAllDates = selectedShipsWithAllDates.stream().filter(ship -> ship.getProdDate().before(new Date(before))).collect(Collectors.toList());
         }
 
-        if (before == null) {
-            Calendar afterCalendar = getCalendarDate(after);
+        return selectedShipsWithAllDates;
 
-            for (Ship ship : selectedShipsWithAllDates) {
-                Calendar productionDate = getCalendarDate(ship.getProdDate());
-
-                if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0){
-                    ships.add(ship);
-                }
-            }
-
-            return ships;
-        }
-
-        Calendar afterCalendar = getCalendarDate(after);
-
-        Calendar beforeCalendar = getCalendarDate(before);
-
-
-        for (Ship ship : selectedShipsWithAllDates) {
-            Calendar productionDate = getCalendarDate(ship.getProdDate());
-
-            if((productionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR)) >= 0 &&
-                (productionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
-            {
-                ships.add(ship);
-            }
-        }
-
-        return ships;
     }
 
     private Calendar getCalendarDate(Long millisecs) {
@@ -152,11 +163,6 @@ public class ShipServiceImpl implements ShipService {
             shipTypes.add(shipTypeName);
         }
         return shipTypes;
-    }
-
-    private Integer getYearFromTimestamp(Long after) {
-        Calendar calendar = getCalendarDate(after);
-        return  calendar.get(Calendar.YEAR);
     }
 
     public List<Ship> findAll(){
