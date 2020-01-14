@@ -119,7 +119,7 @@ public class ShipServiceImpl implements ShipService {
         for (Ship ship : selectedShipsWithAllDates) {
             Calendar prodactionDate = getCalendarDate(ship.getProdDate());
 
-            if(prodactionDate.compareTo(afterCalendar) >= 0 &&
+            if(prodactionDate.get(Calendar.YEAR) -  afterCalendar.get(Calendar.YEAR) >= 0 &&
                 (prodactionDate.get(Calendar.YEAR) - beforeCalendar.get(Calendar.YEAR)) < 0)
             {
                 ships.add(ship);
