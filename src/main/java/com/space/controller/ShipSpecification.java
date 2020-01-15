@@ -1,6 +1,6 @@
 package com.space.controller;
 
-import com.space.model.ship.Ship;
+import com.space.model.Ship;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.Date;

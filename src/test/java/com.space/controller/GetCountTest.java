@@ -4,7 +4,7 @@ import com.space.config.MyWebAppInit;
 import com.space.config.WebConfig;
 import com.space.controller.utils.TestDataSourceConfig;
 import com.space.controller.utils.TestsHelper;
-import com.space.model.ship.ShipType;
+import com.space.model.ShipType;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

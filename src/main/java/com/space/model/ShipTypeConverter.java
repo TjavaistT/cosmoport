@@ -1,4 +1,4 @@
-package com.space.model.ship;
+package com.space.model;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

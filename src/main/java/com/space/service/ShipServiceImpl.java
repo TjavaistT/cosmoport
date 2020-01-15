@@ -1,7 +1,7 @@
 package com.space.service;
 
-import com.space.model.ship.Ship;
-import com.space.model.ship.ShipType;
+import com.space.model.Ship;
+import com.space.model.ShipType;
 import com.space.repository.ShipRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
+
+import static com.space.controller.ShipSpecification.*;
 
 @Service
 public class ShipServiceImpl implements ShipService {
@@ -27,62 +29,6 @@ public class ShipServiceImpl implements ShipService {
     public List<Ship> selectWithFilter(Specification<Ship> specification, Pageable pageable) {
         return  shipRepository.findAll(specification, pageable).getContent();
     }
-
-//    @Override
-//    public Collection<Ship> selectShips(
-//        String name, String planet,
-//        ShipType shipType,
-//        Long after, Long before,
-//        Boolean isUsed, Boolean isNew,
-//        Double minSpeed, Double maxSpeed,
-//        Integer minCrewSize, Integer maxCrewSize,
-//        Double minRating, Double maxRating,
-//
-//        Integer pageNumber, Integer pageSize,
-//
-//        ShipOrder order)
-//    {
-//
-//        List<String> shipTypes = getSelectedShipTypes(shipType);
-//
-//        int afterYear = after == null ? Ship.ProdDate.MIN : getYearFromTimestamp(after);
-//        int beforeYear = before == null ? Ship.ProdDate.MAX : getYearFromTimestamp(before);
-//
-//        minSpeed = minSpeed == null ? 0 : minSpeed;
-//        maxSpeed = maxSpeed == null ? 99999 : maxSpeed;
-//
-//        minRating = minRating == null ? 0 : minRating;
-//        maxRating = maxRating == null ? 99999 : maxRating;
-//
-//        minCrewSize = minCrewSize == null ? Ship.CrewSize.MIN : minCrewSize;
-//        maxCrewSize = maxCrewSize == null ? Ship.CrewSize.MAX : maxCrewSize;
-//
-//        pageNumber = pageNumber == null ? 0 : pageNumber;
-//        pageSize = pageSize == null || pageSize == 0  ? 99999 : pageSize;
-//
-//        String sortOrder = order == null ? ShipOrder.ID.getFieldName() : order.getFieldName();
-//
-//        List<Ship> selectedShipsWithAllDates = shipRepository.selectShips(
-//                name,
-//                planet,
-//                shipTypes,
-//                isUsed, isNew,
-//
-//                minSpeed, maxSpeed,
-//
-//                minCrewSize, maxCrewSize,
-//                minRating, maxRating,
-//
-//                Sort.by(Sort.Direction.ASC, sortOrder)
-//        );
-//
-//        List<Ship> selectedShips = filterDates(selectedShipsWithAllDates, afterYear, beforeYear);
-//
-//        return selectedShips.stream()
-//                .skip(pageNumber * pageSize)
-//                .limit(pageSize)
-//                .collect(Collectors.toList());
-//    }
 
     private List<Ship> filterDates(List<Ship> selectedShipsWithAllDates, int afterYear, int beforeYear) {
 
@@ -128,6 +74,112 @@ public class ShipServiceImpl implements ShipService {
     @Override
     public boolean isExistShipById(long id) {
         return shipRepository.existsById(id);
+    }
+
+    @Override
+    public Specification<Ship> filterByName(String name) {
+
+        if(name == null ) name = "";
+
+        return Specification.where(paramContains("name", name));
+    }
+
+    @Override
+    public Specification<Ship> filterByPlanet(String planet) {
+
+        if(planet == null) planet = "";
+
+        return paramContains("planet", planet);
+    }
+
+    @Override
+    public Specification<Ship> filterByShipType(ShipType shipType) {
+        if(shipType == null) return null;
+
+        return paramEquals("shipType", shipType.name());
+    }
+
+    @Override
+    public Specification<Ship> filterByProdDate(Long after, Long before) {
+        if(after == null && before == null) return null;
+
+        String prodDateName = "prodDate";
+        if(before == null){
+            Date afterDate = getDateFromMillis(after);
+            return dateGreaterEqual(prodDateName, afterDate);
+        }
+
+        if(after == null){
+            Date beforeDate = getDateFromMillis(before);
+            return dateLessEqual(prodDateName, beforeDate);
+        }
+
+        Date afterDate = getDateFromMillis(after);
+        Date beforeDate = getDateFromMillis(before);
+
+        return dateGreaterEqual(prodDateName, afterDate).and(
+                dateLessEqual(prodDateName, beforeDate));
+    }
+
+    @Override
+    public Specification<Ship> filterByUsed(Boolean isUsed) {
+        if(isUsed == null) return null;
+
+        return paramEquals("isUsed", isUsed);
+    }
+
+    @Override
+    public Specification<Ship> filterBySpeed(Double minSpeed, Double maxSpeed) {
+        if(minSpeed == null && maxSpeed == null) return null;
+
+        String speedName = "speed";
+
+        if(minSpeed == null){
+            return paramLessEqual(speedName, maxSpeed);
+        }
+
+        if (maxSpeed == null){
+            return paramGreaterEqual(speedName, minSpeed);
+        }
+
+        return paramLessEqual(speedName, maxSpeed).and(
+            paramGreaterEqual(speedName, minSpeed)
+        );
+    }
+
+    @Override
+    public Specification<Ship> filterByCrewSize(Integer minCrewSize, Integer maxCrewSize) {
+        if (minCrewSize == null && maxCrewSize == null) return null;
+
+        String crewSizeName = "crewSize";
+
+        if(minCrewSize == null) return paramLessEqual(crewSizeName, maxCrewSize);
+
+        if(maxCrewSize == null) return paramGreaterEqual(crewSizeName, minCrewSize);
+
+        return paramGreaterEqual(crewSizeName, minCrewSize).and(
+                paramLessEqual(crewSizeName, maxCrewSize)
+        );
+    }
+
+    private Date getDateFromMillis(Long millisecs) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(millisecs);
+        return calendar.getTime();
+    }
+
+    @Override
+    public Specification<Ship> filterByRating(Double minRating, Double maxRating) {
+        if(minRating == null && maxRating == null) return null;
+
+        String ratingName = "rating";
+        if(minRating == null) return paramLessEqual(ratingName, maxRating);
+
+        if(maxRating == null) return paramGreaterEqual(ratingName, minRating);
+
+        return paramLessEqual(ratingName, maxRating).and(
+                paramGreaterEqual(ratingName, minRating)
+        );
     }
 
     @Override

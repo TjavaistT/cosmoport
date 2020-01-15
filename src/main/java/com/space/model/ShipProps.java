@@ -1,4 +1,4 @@
-package com.space.model.ship;
+package com.space.model;
 
 abstract class ShipProps <T> {
 

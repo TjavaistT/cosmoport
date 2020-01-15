@@ -1,6 +1,4 @@
-package com.space.model.ship.validation;
-
-import com.space.model.ship.Ship;
+package com.space.model.validation;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

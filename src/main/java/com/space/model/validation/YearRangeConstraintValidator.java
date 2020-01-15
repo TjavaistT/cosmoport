@@ -1,4 +1,4 @@
-package com.space.model.ship.validation;
+package com.space.model.validation;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;

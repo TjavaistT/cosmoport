@@ -1,6 +1,6 @@
 package com.space.controller.utils;
 
-import com.space.model.ship.ShipType;
+import com.space.model.ShipType;
 
 import java.util.Calendar;
 import java.util.Objects;

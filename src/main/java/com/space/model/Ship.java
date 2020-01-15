@@ -1,6 +1,6 @@
-package com.space.model.ship;
+package com.space.model;
 
-import com.space.model.ship.validation.YearRange;
+import com.space.model.validation.YearRange;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -178,21 +178,6 @@ public class Ship implements Serializable {
       ", crewSize=" + crewSize +
       ", rating=" + rating +
       "}";
-    }
-
-    public Map<String, String> toJsonMap() {
-        Map<String, String> map = new LinkedHashMap<>();
-        map.put("id", String.valueOf(id));
-        map.put("name", name);
-        map.put("planet", planet);
-        map.put("shipType", shipType);
-        map.put("prodDate", String.valueOf(prodDate.getTime()));
-        map.put("isUsed", String.valueOf(isUsed));
-        map.put("speed", String.valueOf(speed));
-        map.put("crewSize", String.valueOf(crewSize));
-        map.put("rating", String.valueOf(rating));
-
-        return map;
     }
 
     public class ProdDate extends ShipProps{
